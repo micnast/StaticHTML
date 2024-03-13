@@ -80,6 +80,3 @@ def  text_node_to_html_node(text_node):
         return LeafNode(tags[text_node.text_type], text_node.text, text_node.url)
     elif text_node.text_type == "text_type_image":
         return LeafNode(tags[text_node.text_type], "", text_node.url, text_node.alt)
-
-    
-    
