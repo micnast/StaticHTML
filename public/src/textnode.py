@@ -115,27 +115,52 @@ def split_nodes_link(old_nodes):
     return new_nodes
 
 def text_to_textnodes(node_list):
-    split_link_nodes = []
-    split_delimeter_nodes = []
     delimiter_bold = split_nodes_delimiter(node_list,'**', text_type_bold)
     delimiter_italic = split_nodes_delimiter(delimiter_bold,'*', text_type_italic)
     delimiter_code = split_nodes_delimiter(delimiter_italic,'`', text_type_code)
     split_image = split_nodes_image(delimiter_code)
-    split_link = split_nodes_link(split_image)
-    return split_link
+    final_split_link = split_nodes_link(split_image)
+    return final_split_link
     
-    
-    
+def markdown_to_blocks(markdown):
+    markdown_list = markdown.split("\n\n")
+    for i in range(len(markdown_list)):
+        markdown_list[i] = markdown_list[i].strip()
+    return(markdown_list)
 
-
-# Do the delimiter last cos it wants to go through a list of nodes anyway. 
-
-
-test_text = "This is **text** with an *italic* word and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://boot.dev)"
-node_complete = TextNode(
-    "This is **text** with an *italic* word and a `code block` and an ![image](https://i.imgur.com/zjjcJKZ.png) and a [link](https://boot.dev)",
-    text_type_text, None, None)
-node_list = [node_complete]
-
-
-print(text_to_textnodes(node_list))
+def block_to_block_type(block):
+    block_type_paragraph = "paragraph"
+    block_type_heading = "heading"
+    block_type_code = "code"
+    block_type_quote = "quote"
+    block_type_unordered_list = "unordered_list"
+    block_type_ordered_list = "ordered_list"
+    if block.startswith("#"):
+        return block_type_heading
+    elif block.startswith("```") and block.endswith("```"):
+        return block_type_code
+    elif block.startswith(">"):
+        block_lines = block.split("\n")
+        for i in range(len(block_lines)):
+            block_lines[i]= block_lines[i].strip()
+            if block_lines[i].startswith(">") == False:
+                    return block_type_paragraph
+        else:
+            return block_type_quote
+    elif block.startswith("*") or block.startswith("-"):
+        block_lines = block.split("\n")
+        for i  in range(len(block_lines)):
+            block_lines[i] = block_lines[i].strip()
+            if block_lines[i].startswith("*") == False and block_lines[i].startswith("-") == False:
+                return block_type_paragraph
+        else:
+            return block_type_unordered_list
+    elif block.startswith("1."):
+        block_lines = block.split("\n")
+        for i in range(len(block_lines)):
+            if not block_lines[i][0].isdigit() or not block_lines[i][1] == "." or not block_lines[i][2] == " ":
+                return block_type_paragraph
+        else:
+            return block_type_ordered_list
+    else:
+        return block_type_paragraph

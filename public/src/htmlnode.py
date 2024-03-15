@@ -1,5 +1,5 @@
 from  textnode import TextNode
-
+from textnode import text_to_textnodes
 class HTMLNode:
     def __init__(self, tag=None, value=None, children=None, props=None, alt = None) -> None:
         self.tag = tag
@@ -80,3 +80,43 @@ def  text_node_to_html_node(text_node):
         return LeafNode(tags[text_node.text_type], text_node.text, text_node.url)
     elif text_node.text_type == "text_type_image":
         return LeafNode(tags[text_node.text_type], "", text_node.url, text_node.alt)
+
+
+"""
+convert_quote_to_html_node(quote_block)
+convert_unordered_list_to_html_node(unordered_list_block)
+convert_ordered_list_to_html_node(ordered_list_block)
+convert_code_to_html_node(code_block)
+convert_heading_to_html_node(heading_block)
+convert_paragraph_to_html_node(paragraph_block)
+And then, you'll have your larger orchestrating function that utilizes the above functions:
+
+markdown_to_html_node(markdown)
+"""
+
+quote = """- Wake up
+- Brush teeth
+- Shower
+- Get dressed
+- Eat breakfast
+"""
+
+
+def convert_quote_to_html_node(quote_block):
+    block_lines = quote_block.split("\n>")
+    block_lines[0] = block_lines[0][1:]
+    for i in range(len(block_lines)):
+        block_lines[i] = block_lines[i].strip()
+    return HTMLNode("blockquote", None, text_to_textnodes(block_lines), None, None)
+
+def convert_unorderedlist_to_html_node(quote_block):
+    block_lines = quote_block.split("\n>")
+    children_list = []
+    for i in range(len(block_lines)):
+        block_lines[i] = block_lines[i].strip()
+        block_lines[i] = block_lines[i][2:]
+        children_list.append(TextNode(block_lines, any))
+    return HTMLNode("li", None, children_list, None, None)
+
+
+print(convert_unorderedlist_to_html_node(quote))
