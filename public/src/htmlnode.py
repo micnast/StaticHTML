@@ -1,3 +1,4 @@
+import re
 from  textnode import TextNode
 from textnode import text_to_textnodes
 class HTMLNode:
@@ -94,13 +95,35 @@ And then, you'll have your larger orchestrating function that utilizes the above
 markdown_to_html_node(markdown)
 """
 
-quote = """- Wake up
-- Brush teeth
-- Shower
-- Get dressed
-- Eat breakfast
-"""
+quote = """# Title Heading
+*This text will be italic*
+**This text will be bold**
 
+## Sub-heading level 2
+This is a normal paragraph. The quick brown fox jumps over the lazy dog.
+
+### Another deeper heading level 3
+
+1. First item in ordered list
+2. Second item
+3. Third item
+   - First sub-item in an unordered list
+   - Second sub-item
+
+#### Heading level 4
+Here's a quote:
+
+> THIS IS THE QUOTE!
+
+##### Heading level 5
+Have a piece of code:
+
+```python
+def hello_world():
+    print("Hello, world!")```s
+
+"""
+test_quote = '> Hello, world!'
 
 def convert_quote_to_html_node(quote_block):
     block_lines = quote_block.split("\n>")
@@ -110,13 +133,156 @@ def convert_quote_to_html_node(quote_block):
     return HTMLNode("blockquote", None, text_to_textnodes(block_lines), None, None)
 
 def convert_unorderedlist_to_html_node(quote_block):
-    block_lines = quote_block.split("\n>")
+    block_lines = quote_block.split("\n-")
+    block_lines[0] = block_lines[0][1:]
     children_list = []
     for i in range(len(block_lines)):
         block_lines[i] = block_lines[i].strip()
-        block_lines[i] = block_lines[i][2:]
-        children_list.append(TextNode(block_lines, any))
-    return HTMLNode("li", None, children_list, None, None)
+        children_list.append(TextNode(block_lines[i], None))
+    return HTMLNode("ul", None, children_list, None, None)
+
+def convert_orderedlist_to_html_node(quote_block):
+    children_list = []
+    block_lines = quote_block.split("\n")
+    for i in range (0, len(block_lines)):
+        if block_lines[i] == '':
+            continue
+        if block_lines[i][0].isdigit() and block_lines[i][1] == ".":
+            block_lines[i] = block_lines[i].strip()
+            block_lines[i] = block_lines[i][3:]
+            children_list.append(TextNode(block_lines[i], None))
+    return HTMLNode("ol", None, children_list, None, None)
+
+def convert_text_to_listitem_node(line):
+    if line[0].isdigit() and line[1] == ".":
+        line = line.strip()
+        line = line[3:]
+        text_child = TextNode(line,None)
+    if line.startswith('-'):
+        line = line.strip()
+        line = line[2:]
+        text_child = TextNode(line,None)
+    return HTMLNode("li",None,[text_child],None,None)
+
+def convert_code_to_html_node(quote_block):
+    if quote_block.startswith('```'):
+        quote_block = quote_block[3:-4]
+    text_node = TextNode(quote_block.strip(), None)
+    code_node = HTMLNode('code', None, [text_node], None, None)
+    pre_node = HTMLNode('pre', None, [code_node], None, None)
+    return pre_node
+
+def convert_heading_to_html_node(quote_block):
+    children_list = []
+    one_tag ='#'
+    headings = quote_block.split("\n")
+    for line in headings:
+        line = line.strip()
+        for i in range (6, 0, -1):
+            if line.startswith(f'{one_tag*i} '):
+                line = line[i+1:]
+                text_node = TextNode(line, None)
+                heading_node = HTMLNode (f'h{i}', None, text_node, None, None)
+                children_list.append(heading_node)
+                break
+    return HTMLNode('headings', None, children_list, None, None)
+
+def convert_paragraph_to_html_node(quote_block):
+    text_node =  TextNode(quote_block, None)
+    return HTMLNode('p', text_node, None, None, None)
+    
+
+def markdown_to_html_node(markdown):
+    all_nodes = []
+    i = 0
+    markdown_lines = markdown.split('\n')
+    while i < len(markdown_lines):
+        line = markdown_lines[i].strip()
+        if line == '':
+            i+=1
+            continue
+        if line.startswith('>'):
+            all_nodes.append(convert_quote_to_html_node(line))
+            i+=1
+        elif re.match("^\s*-",line):
+            list_node = HTMLNode("ul",children = [])
+            list_item_node = convert_text_to_listitem_node(line)
+            list_node.children.append(list_item_node)
+            i+= 1
+            for line_indices in range(i,len(markdown_lines)):
+                if markdown_lines[line_indices] == '':
+                    i+=1
+                    continue
+                if re.match("^s*-",markdown_lines[line_indices]):
+                    list_item_node = convert_text_to_listitem_node(markdown_lines[line_indices])
+                    list_node.children.append(list_item_node)
+                    i+=1
+                else:
+                    i+=1
+                    break
+            all_nodes.append(list_node)
+        elif line[0] == '1' and line[1] == ".":
+            list_node = HTMLNode("ol", children = [])
+            list_item_node = convert_text_to_listitem_node(line)
+            list_node.children.append(list_item_node)
+            i+=1
+            for line_indices in range (i,len(markdown_lines)):
+                if markdown_lines[line_indices] == '':
+                    i+=1
+                    continue
+                if markdown_lines[line_indices][0].isdigit() and markdown_lines[line_indices][1] == ".":
+                    list_item_node =  convert_text_to_listitem_node(markdown_lines[line_indices])
+                    list_node.children.append(list_item_node)
+                    i+=1
+                else:
+                    i+=1
+                    break
+            all_nodes.append(list_node)
+        elif line.startswith('```'):
+            code_block = line
+            i += 1
+            while i < len(markdown_lines):
+                code_block += '\n' + markdown_lines[i]
+                if re.search("```",markdown_lines[i]):
+                    all_nodes.append(convert_code_to_html_node(code_block))
+                    i += 1
+                    break
+                i+=1
+        elif line.startswith('#'):
+            all_nodes.append(convert_heading_to_html_node(line))
+            i+=1
+        else:
+            all_nodes.append(convert_paragraph_to_html_node(line))
+            i+=1
+    return all_nodes
+
+test_ordered = '''# Steps to make a sandwich
+1. Get bread
+2. Get peanut butter
+3. Get jelly
+4. Spread peanut butter on one slice of bread
+5. Spread jelly on another slice of bread
+6. Press both slices together
+7. Slice the sandwich in half
+8. Serve with milk
+9. Bon appétit!
+10. Clean up
+11. Congratulate yourself on a job well done
+
+'''
+
+print (markdown_to_html_node(test_block))
 
 
-print(convert_unorderedlist_to_html_node(quote))
+
+
+
+
+"""
+convert_quote_to_html_node(quote_block)
+convert_unordered_list_to_html_node(unordered_list_block)
+convert_ordered_list_to_html_node(ordered_list_block)
+convert_code_to_html_node(code_block)
+convert_heading_to_html_node(heading_block)
+convert_paragraph_to_html_node(paragraph_block)
+"""
