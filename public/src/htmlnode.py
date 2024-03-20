@@ -82,49 +82,6 @@ def  text_node_to_html_node(text_node):
     elif text_node.text_type == "text_type_image":
         return LeafNode(tags[text_node.text_type], "", text_node.url, text_node.alt)
 
-
-"""
-convert_quote_to_html_node(quote_block)
-convert_unordered_list_to_html_node(unordered_list_block)
-convert_ordered_list_to_html_node(ordered_list_block)
-convert_code_to_html_node(code_block)
-convert_heading_to_html_node(heading_block)
-convert_paragraph_to_html_node(paragraph_block)
-And then, you'll have your larger orchestrating function that utilizes the above functions:
-
-markdown_to_html_node(markdown)
-"""
-
-quote = """# Title Heading
-*This text will be italic*
-**This text will be bold**
-
-## Sub-heading level 2
-This is a normal paragraph. The quick brown fox jumps over the lazy dog.
-
-### Another deeper heading level 3
-
-1. First item in ordered list
-2. Second item
-3. Third item
-   - First sub-item in an unordered list
-   - Second sub-item
-
-#### Heading level 4
-Here's a quote:
-
-> THIS IS THE QUOTE!
-
-##### Heading level 5
-Have a piece of code:
-
-```python
-def hello_world():
-    print("Hello, world!")```s
-
-"""
-test_quote = '> Hello, world!'
-
 def convert_quote_to_html_node(quote_block):
     block_lines = quote_block.split("\n>")
     block_lines[0] = block_lines[0][1:]
@@ -155,6 +112,10 @@ def convert_orderedlist_to_html_node(quote_block):
 
 def convert_text_to_listitem_node(line):
     if line[0].isdigit() and line[1] == ".":
+        line = line.strip()
+        line = line[3:]
+        text_child = TextNode(line,None)
+    if line[0].isdigit() and line[1].isdigit() and line[2] == ".":
         line = line.strip()
         line = line[3:]
         text_child = TextNode(line,None)
@@ -234,6 +195,10 @@ def markdown_to_html_node(markdown):
                     list_item_node =  convert_text_to_listitem_node(markdown_lines[line_indices])
                     list_node.children.append(list_item_node)
                     i+=1
+                elif markdown_lines[line_indices][0].isdigit() and markdown_lines[line_indices][1].isdigit() and markdown_lines[line_indices][2] == ".":
+                    list_item_node =  convert_text_to_listitem_node(markdown_lines[line_indices])
+                    list_node.children.append(list_item_node)
+                    i+=1
                 else:
                     i+=1
                     break
@@ -256,33 +221,13 @@ def markdown_to_html_node(markdown):
             i+=1
     return all_nodes
 
-test_ordered = '''# Steps to make a sandwich
-1. Get bread
-2. Get peanut butter
-3. Get jelly
-4. Spread peanut butter on one slice of bread
-5. Spread jelly on another slice of bread
-6. Press both slices together
-7. Slice the sandwich in half
-8. Serve with milk
-9. Bon appétit!
-10. Clean up
-11. Congratulate yourself on a job well done
-
-'''
-
-print (markdown_to_html_node(test_block))
-
-
-
-
-
-
-"""
-convert_quote_to_html_node(quote_block)
-convert_unordered_list_to_html_node(unordered_list_block)
-convert_ordered_list_to_html_node(ordered_list_block)
-convert_code_to_html_node(code_block)
-convert_heading_to_html_node(heading_block)
-convert_paragraph_to_html_node(paragraph_block)
-"""
+def extract_title(markdown):
+    markdown_lines = markdown.split('\n')
+    for line in markdown_lines:
+        if line.startswith('# '):
+            line = line.strip()
+            line = line[2:]
+            return line
+    else:
+        raise Exception('No h1 header found in file.')
+        
