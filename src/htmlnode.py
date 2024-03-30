@@ -76,18 +76,17 @@ class ParentNode(HTMLNode):
             else:
                 kids_string += kids.to_html()
          html_code = f"<{self.tag}>{kids_string}</{self.tag}>"
-         print(html_code)
          return html_code
 
 
 
 def  convert_text_node_to_html_node(text_node):
     node_list = []
-    tags = {"text" : 'text',
+    tags = {'p':'p',
              "b" :"b",
              "i" :"i",
              "code" :"code",
-             "a" :"link",
+             "a" :"a",
              "image" :"image",
              'h1': 'h1',
              'h2': 'h2',
@@ -103,8 +102,8 @@ def  convert_text_node_to_html_node(text_node):
                 node_list.append(LeafNode('', node.text))
             if node.text_type not in tags:
                 raise Exception(f"Type {node.text_type} not compatible")
-            if node.text_type == "text":
-                node_list.append(LeafNode(node.text_type, node.text))
+            if node.text_type == "p" or node.text_type == 'text':
+                node_list.append(LeafNode('p', node.text))
             elif node.text_type == "b":
                 node_list.append(LeafNode(tags[node.text_type], node.text))
             elif node.text_type == "i":
@@ -122,7 +121,7 @@ def  convert_text_node_to_html_node(text_node):
             return
         if text_node.text_type not in tags:
             raise Exception(f"Type {text_node.text_type} not compatible")
-        if text_node.text_type == "text":
+        if text_node.text_type == "p":
             return LeafNode(text_node.text_type, text_node.text)
         elif text_node.text_type == "b":
             return LeafNode(tags[text_node.text_type], text_node.text)
@@ -204,7 +203,6 @@ def convert_heading_to_html_node(quote_block):
                 parent_heading_node.children = convert_text_node_to_html_node(parent_heading_node.children)
                 children_list.append(parent_heading_node)
                 break
-    print(parent_heading_node)
     return parent_heading_node
 
 def text_to_children(text):
@@ -261,10 +259,12 @@ def extract_title(markdown):
 
 
 
-example_short = '''Once upon a time, in a **faraway land**, there lived a wise old bear named Boots. Boots was not an ordinary bear; he was an *augmentus*, a magical bear with the ability to speak and wield magic. 
-`Boots loved two things above all: teaching and honey.` Every day, he would wander the forest, sharing his knowledge with the animals, teaching them the secrets of the magical arts. 
-One day, while exploring a *hidden glade*, Boots stumbled upon a **mysterious artifact**. This artifact, a **golden comb**, was said to produce the sweetest honey in the world. Boots knew that with this comb, he could make the forest a **better'''
+example_short = '''# Tolkien Fan Club
 
+I like Tolkien. Read my [first post here](/majesty)
+'''
+
+markdown_to_html_node(example_short)
 
 
 example = """# The Unparalleled Majesty of "The Lord of the Rings"

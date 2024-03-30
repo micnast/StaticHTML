@@ -20,7 +20,7 @@ text_type_bold = 'b'
 text_type_italic = 'i'
 text_type_code = 'code'
 text_type_text = 'text'
-text_type_link = 'link'
+text_type_link = 'a'
 text_type_image = 'image'
 
 delimiter_keys = {'**':text_type_bold,
@@ -126,7 +126,7 @@ def split_nodes_link(old_nodes):
                     else:
                         split_text_list = leftover[0].split(f"[{link_tup[0][0]}]({link_tup[0][1]})",1)
                         if split_text_list[0].strip():
-                            new_nodes.append(TextNode(split_text_list[0], node.text_type))
+                            new_nodes.append(TextNode(split_text_list[0],'p'))
                         new_nodes.append(TextNode(link_tup[0][0], 'a', f'{link_tup[0][1]}'))
                         leftover = []
                         leftover.append(split_text_list[1])
