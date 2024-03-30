@@ -120,7 +120,7 @@ def split_nodes_link(old_nodes):
                             leftover = []
                             continue
                         else:
-                            new_nodes.append(TextNode(leftover[0], 'a', node.url, node.alt))
+                            new_nodes.append(TextNode(leftover[0], 'text', node.url, node.alt))
                             leftover = []
                             continue
                     else:

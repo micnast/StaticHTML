@@ -83,6 +83,7 @@ class ParentNode(HTMLNode):
 def  convert_text_node_to_html_node(text_node):
     node_list = []
     tags = {'p':'p',
+             'text':'p',
              "b" :"b",
              "i" :"i",
              "code" :"code",
@@ -121,7 +122,7 @@ def  convert_text_node_to_html_node(text_node):
             return
         if text_node.text_type not in tags:
             raise Exception(f"Type {text_node.text_type} not compatible")
-        if text_node.text_type == "p":
+        if text_node.text_type == "p" or text_node.text_type == 'text':
             return LeafNode(text_node.text_type, text_node.text)
         elif text_node.text_type == "b":
             return LeafNode(tags[text_node.text_type], text_node.text)
@@ -243,8 +244,10 @@ def markdown_to_html_node(markdown):
     children = []
     blocks = markdown_to_blocks(markdown)
     for block in blocks:
+        print(block,'-----------------------')
         html_node = block_to_html_node(block)
         children.append(html_node)
+        print(html_node)
     return ParentNode("div", children, None)
 
 def extract_title(markdown):
